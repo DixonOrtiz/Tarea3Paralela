@@ -26,6 +26,8 @@ int main(int argc, char **argv){
     MPI_Comm_rank(MPI_COMM_WORLD, &procesador);
     MPI_Comm_size(MPI_COMM_WORLD, &tamanio);
 
+    
+
     divideArreglo(arreglo, tamanio, procesador);
 
 
@@ -55,37 +57,47 @@ void mostrarArreglo(vector<int> arreglo, int procesador){
 }
 
 void divideArreglo(vector<int> arreglo, int tamanio, int procesador){
-    int divisionEntera = (arreglo.size()/tamanio);
+    int divisionEntera = (arreglo.size()/(tamanio - 1));
     int indiceIzq = 0;
     int indiceDer = 0;
 
-    for(int i = 0; i < tamanio; i++){
+    if(procesador == 0){
+            int sumatotal = 0;
+            int recibeInfo = 0;
+            MPI_Status status;
+
+            for(int i = 1; i < tamanio; i++){
+                MPI_Recv(&recibeInfo, 1, MPI_INT, i, 7, MPI_COMM_WORLD, &status);
+                cout << "La suma recibida del procesador " << i << " es: " << recibeInfo << endl;
+
+            }
+    }
+
+    for(int i = 1; i < tamanio; i++){
+
         if(procesador == i){
+            int suma = 0;
             if(i != (tamanio - 1)){
-                int suma = 0;
-                indiceIzq = procesador * (divisionEntera);
+                
+                
+                indiceIzq = (procesador - 1) * (divisionEntera);
                 indiceDer = indiceIzq + (divisionEntera - 1);
 
                 for(int j = indiceIzq; j <= indiceDer; j++)
                     suma += arreglo[j];
-                
-                cout << "La suma del procesador " << procesador << " es: " << suma << endl;
-                
-                
             }
 
             else{
-                int suma = 0;
-                indiceIzq = procesador * (divisionEntera);
+                
+                indiceIzq = (procesador - 1) * (divisionEntera);
                 indiceDer = (arreglo.size() - 1);
 
                 for(int j = indiceIzq; j <= indiceDer; j++)
-                    suma += arreglo[j];
-                
-                cout << "La suma del procesador " << procesador << " es: " << suma << endl;
-                
+                    suma += arreglo[j];                     
             }
-                
-        }
+
+            MPI_Send(&suma, 1, MPI_INT, 0, 7, MPI_COMM_WORLD);
+
+        }      
     }
 }
